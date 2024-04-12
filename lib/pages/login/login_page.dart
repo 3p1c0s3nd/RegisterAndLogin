@@ -30,7 +30,9 @@ class _LoginPageState extends State<LoginPage> {
       if (user != null) {
         //mySharedPreference.save('user', user);
         mySharedPreference.save('token', res.session!.accessToken);
-        Navigator.of(context).pushReplacementNamed('/home');
+        if (context.mounted) {
+          Navigator.of(context).pushReplacementNamed('/home');
+        }
       }
     } catch (e) {
       if (e is AuthApiException) {
@@ -127,7 +129,7 @@ class _LoginPageState extends State<LoginPage> {
       margin: EdgeInsets.only(left: 25, right: 25, top: 15),
       child: ElevatedButton(
         onPressed: () {
-          Navigator.pushNamed(context, 'register');
+          Navigator.pushNamed(context, '/register');
         },
         style: ElevatedButton.styleFrom(backgroundColor: Colors.black),
         child: Text(

@@ -1,9 +1,15 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:prueba_mobx_y_supabase/main.dart';
 import 'package:prueba_mobx_y_supabase/utils/DefaultTextField.dart';
+import 'package:prueba_mobx_y_supabase/utils/my_avatar.dart';
 import 'package:prueba_mobx_y_supabase/utils/my_shared_preference.dart';
 import 'package:prueba_mobx_y_supabase/utils/my_snackbar.dart';
+import 'package:sn_progress_dialog/progress_dialog.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:animate_do/animate_do.dart';
 
 class RegisterForm extends StatefulWidget {
   @override
@@ -12,21 +18,77 @@ class RegisterForm extends StatefulWidget {
 
 class _RegisterFormState extends State<RegisterForm> {
   MySharedPreference mySharedPreference = MySharedPreference();
-  final _formKey = GlobalKey<FormState>();
   String email = '';
   String password = '';
   String nombre = '';
   String apellidos = '';
   String telefono = '';
   bool isLoading = false;
+  XFile? pickedFile;
+  File? imageFile;
+  String _avatarUrl = '';
+
+  //ProgressDialog? _progressDialog;
+
+  /*void showAlertDialog() {
+    Widget galleryButton = ElevatedButton(
+      child: const Text("GALERIA"),
+      onPressed: () {
+        selectImage(ImageSource.gallery);
+      },
+    );
+
+    Widget camaraButton = ElevatedButton(
+      child: const Text("CAMARA"),
+      onPressed: () {
+        selectImage(ImageSource.camera);
+      },
+    );
+
+    AlertDialog alert =
+        AlertDialog(title: const Text("Elija una imagen"), actions: [
+      galleryButton,
+      camaraButton,
+    ]);
+
+    showDialog(context: context!, builder: (BuildContext context) => alert);
+  }
+
+  Future selectImage(ImageSource imageSource) async {
+    pickedFile = await ImagePicker().pickImage(source: imageSource);
+    if (pickedFile != null) {
+      imageFile = File(pickedFile!.path);
+    }
+    Navigator.pop(context!);
+    setState(() {});
+  }*/
 
   void _register() async {
     try {
-      final AuthResponse res = await supabase.auth.signUp(
+      /*final AuthResponse res = await supabase.auth.signUp(
         email: email,
         password: password,
-        data: {'name': nombre, 'apellidos': apellidos, 'telefono': telefono},
-      );
+        data: {
+          'name': nombre,
+          'apellidos': apellidos,
+          'telefono': telefono,
+          'avatar_url': _avatarUrl
+        },
+      );*/
+
+      await supabase.from('users').insert({
+        //'id': supabase.auth.currentUser!.id,
+        'email': email,
+        'password': password,
+        'name': nombre,
+        'lastname': apellidos,
+        'phone': telefono,
+        'image': _avatarUrl,
+        'created_at': DateTime.now().toString(),
+        'updated_at': DateTime.now().toString(),
+
+        //'session_token': res.session!.accessToken,
+      });
 
       Navigator.of(context).pushReplacementNamed('/login');
 
@@ -38,12 +100,45 @@ class _RegisterFormState extends State<RegisterForm> {
         mySharedPreference.save('token', res.session!.accessToken);
       }*/
     } catch (e) {
+      print(e);
       if (e is AuthApiException) {
         MySnackbar.show(context, e.message);
       } else {
         MySnackbar.show(context, 'Error desconocido');
       }
     }
+  }
+
+  Future<void> _onUpload(String imageUrl) async {
+    try {
+      final userId = supabase.auth.currentUser!.id;
+      await supabase.from('profiles').upsert({
+        'id': userId,
+        'avatar_url': imageUrl,
+      });
+      if (mounted) {
+        const SnackBar(
+          content: Text('Updated your profile image!'),
+        );
+      }
+    } on PostgrestException catch (error) {
+      SnackBar(
+        content: Text(error.message),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      );
+    } catch (error) {
+      SnackBar(
+        content: const Text('Unexpected error occurred'),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      );
+    }
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _avatarUrl = imageUrl;
+    });
   }
 
   @override
@@ -65,8 +160,12 @@ class _RegisterFormState extends State<RegisterForm> {
                   mainAxisAlignment: MainAxisAlignment.center, // VERTICAL
                   crossAxisAlignment: CrossAxisAlignment.center, // HORIZANTAL
                   children: [
+                    Avatar(
+                      imageUrl: _avatarUrl,
+                      onUpload: _onUpload,
+                    ),
                     _iconPerson(),
-                    _textLogin(),
+                    //_textLogin(),
                     _textFieldNombre(),
                     _textFieldApellidos(),
                     _textFieldTelefono(),
@@ -85,6 +184,30 @@ class _RegisterFormState extends State<RegisterForm> {
     );
   }
 
+  /* Widget _imagePerfil() {
+    return GestureDetector(
+      onTap: () {
+        showAlertDialog();
+      },
+      child: FadeIn(
+        duration: const Duration(milliseconds: 1200),
+        child: Center(
+          child: Container(
+            margin: EdgeInsets.only(
+                bottom: MediaQuery.of(context).size.height * 0.03),
+            child: CircleAvatar(
+              radius: 50,
+              backgroundImage: imageFile != null
+                  ? FileImage(imageFile!)
+                  : const AssetImage("assets/img/user_profile_2.png")
+                      as ImageProvider,
+            ),
+          ),
+        ),
+      ),
+    );
+  }*/
+
   Widget _iconPerson() {
     return Icon(
       Icons.person,
@@ -95,7 +218,7 @@ class _RegisterFormState extends State<RegisterForm> {
 
   Widget _textLogin() {
     return Text(
-      'LOGIN',
+      'REGISTRASE',
       style: TextStyle(
           color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
     );

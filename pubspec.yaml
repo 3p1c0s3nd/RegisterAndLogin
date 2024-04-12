@@ -40,6 +40,9 @@ dependencies:
   dio: ^5.4.2+1
   intl: ^0.19.0
   fluttertoast: ^8.2.4
+  image_picker: ^1.0.8
+  sn_progress_dialog: ^1.1.4
+  animate_do: ^3.3.4
 
 dev_dependencies:
   flutter_test:
