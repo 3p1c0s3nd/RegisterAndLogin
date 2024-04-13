@@ -26,6 +26,7 @@ class _AvatarState extends State<Avatar> {
       children: [
         if (widget.imageUrl == null || widget.imageUrl!.isEmpty)
           Container(
+            margin: EdgeInsets.all(10),
             width: 150,
             height: 150,
             color: Colors.grey,

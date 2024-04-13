@@ -31,7 +31,7 @@ class _LoginPageState extends State<LoginPage> {
         //mySharedPreference.save('user', user);
         mySharedPreference.save('token', res.session!.accessToken);
         if (context.mounted) {
-          Navigator.of(context).pushReplacementNamed('/home');
+          Navigator.of(context).pushReplacementNamed('/account');
         }
       }
     } catch (e) {

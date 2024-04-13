@@ -7,7 +7,6 @@ import 'package:prueba_mobx_y_supabase/utils/DefaultTextField.dart';
 import 'package:prueba_mobx_y_supabase/utils/my_avatar.dart';
 import 'package:prueba_mobx_y_supabase/utils/my_shared_preference.dart';
 import 'package:prueba_mobx_y_supabase/utils/my_snackbar.dart';
-import 'package:sn_progress_dialog/progress_dialog.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:animate_do/animate_do.dart';
 
@@ -27,6 +26,9 @@ class _RegisterFormState extends State<RegisterForm> {
   XFile? pickedFile;
   File? imageFile;
   String _avatarUrl = '';
+
+  List<String> _roles = ['Paciente', 'Doctor', 'Administrador'];
+  String _selectedRole = 'Paciente';
 
   //ProgressDialog? _progressDialog;
 
@@ -65,7 +67,7 @@ class _RegisterFormState extends State<RegisterForm> {
 
   void _register() async {
     try {
-      /*final AuthResponse res = await supabase.auth.signUp(
+      final AuthResponse res = await supabase.auth.signUp(
         email: email,
         password: password,
         data: {
@@ -74,7 +76,7 @@ class _RegisterFormState extends State<RegisterForm> {
           'telefono': telefono,
           'avatar_url': _avatarUrl
         },
-      );*/
+      );
 
       await supabase.from('users').insert({
         //'id': supabase.auth.currentUser!.id,
@@ -84,21 +86,13 @@ class _RegisterFormState extends State<RegisterForm> {
         'lastname': apellidos,
         'phone': telefono,
         'image': _avatarUrl,
+        'rol': _selectedRole,
         'created_at': DateTime.now().toString(),
         'updated_at': DateTime.now().toString(),
-
-        //'session_token': res.session!.accessToken,
+        'session_token': res.session!.accessToken,
       });
 
       Navigator.of(context).pushReplacementNamed('/login');
-
-      /*final User? user = res.user;
-      
-
-      if (user != null) {
-        mySharedPreference.save('user', user);
-        mySharedPreference.save('token', res.session!.accessToken);
-      }*/
     } catch (e) {
       print(e);
       if (e is AuthApiException) {
@@ -151,7 +145,7 @@ class _RegisterFormState extends State<RegisterForm> {
             _imageBackground(context),
             Container(
               width: MediaQuery.of(context).size.width * 0.85,
-              height: MediaQuery.of(context).size.height * 0.75,
+              //height: MediaQuery.of(context).size.height * 0.95,
               decoration: BoxDecoration(
                   color: Color.fromRGBO(255, 255, 255, 0.3),
                   borderRadius: BorderRadius.all(Radius.circular(25))),
@@ -164,13 +158,14 @@ class _RegisterFormState extends State<RegisterForm> {
                       imageUrl: _avatarUrl,
                       onUpload: _onUpload,
                     ),
-                    _iconPerson(),
+                    //_iconPerson(),
                     //_textLogin(),
                     _textFieldNombre(),
                     _textFieldApellidos(),
                     _textFieldTelefono(),
                     _textFieldEmail(),
                     _textFieldPassword(),
+                    _dropDown(_selectedRole),
                     _buttonLogin(context),
                     _textDontHaveAccount(),
                     _buttonGoToRegister(context)
@@ -207,6 +202,47 @@ class _RegisterFormState extends State<RegisterForm> {
       ),
     );
   }*/
+
+  Widget _dropDown(String selectedRole) {
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 25, vertical: 20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.3),
+            spreadRadius: 2,
+            blurRadius: 5,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: DropdownButtonFormField<String>(
+        value: selectedRole,
+        icon: Icon(Icons.arrow_drop_down),
+        iconSize: 24,
+        elevation: 8,
+        style: TextStyle(color: Colors.black, fontSize: 16),
+        decoration: InputDecoration(
+          contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          labelText: 'Rol',
+          border: InputBorder.none,
+        ),
+        onChanged: (String? newValue) {
+          setState(() {
+            selectedRole = newValue!;
+          });
+        },
+        items: _roles.map((String role) {
+          return DropdownMenuItem<String>(
+            value: role,
+            child: Text(role),
+          );
+        }).toList(),
+      ),
+    );
+  }
 
   Widget _iconPerson() {
     return Icon(
@@ -294,14 +330,14 @@ class _RegisterFormState extends State<RegisterForm> {
     return Container(
       width: MediaQuery.of(context).size.width,
       height: 55,
-      margin: EdgeInsets.only(left: 25, right: 25, top: 15),
+      margin: EdgeInsets.only(left: 25, right: 25, top: 15, bottom: 15),
       child: ElevatedButton(
         onPressed: () {
-          Navigator.pushNamed(context, 'register');
+          Navigator.pushNamed(context, '/login');
         },
         style: ElevatedButton.styleFrom(backgroundColor: Colors.black),
         child: Text(
-          'REGISTRATE',
+          'LOGIN',
           style: TextStyle(color: Colors.white),
         ),
       ),
@@ -336,7 +372,7 @@ class _RegisterFormState extends State<RegisterForm> {
     return Container(
         width: MediaQuery.of(context).size.width,
         height: 55,
-        margin: EdgeInsets.only(left: 25, right: 25, top: 25, bottom: 15),
+        margin: EdgeInsets.only(left: 25, right: 25, top: 15, bottom: 15),
         child: ElevatedButton(
           onPressed: () {
             if (email.isEmpty) {
